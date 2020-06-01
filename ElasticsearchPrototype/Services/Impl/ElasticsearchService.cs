@@ -1,4 +1,6 @@
-﻿using ElasticsearchPrototype.Models;
+﻿using DAL;
+using ElasticsearchPrototype.Models;
+using Microsoft.EntityFrameworkCore;
 using Nest;
 using System;
 using System.Collections.Generic;
@@ -42,6 +44,17 @@ namespace ElasticsearchPrototype.Services.Impl
 		private string[] GetMappings()
 		{
 			return _unitOfWork.SoundexMappings.Select(n => $"{n.Text} => {n.MatchText}").ToArray();
+		}
+
+		private async Task<IEnumerable<BuildingSoundex>> GetLoadData()
+		{
+			return await _unitOfWork.Buildings.Where(x => x.CompanyId == 1)
+				.Select(n => new BuildingSoundex
+				{
+					Id = n.Id,
+					Address = n.Address1
+				})
+				.ToListAsync();
 		}
 
 		private async Task<bool> IsIndexExistsAsync()
@@ -88,7 +101,7 @@ namespace ElasticsearchPrototype.Services.Impl
 						)
 					)
 				)
-				.Map<Building>(mm => mm
+				.Map<BuildingSoundex>(mm => mm
 					.AutoMap()
 					.Properties(p => p
 						.Text(t => t
@@ -112,24 +125,7 @@ namespace ElasticsearchPrototype.Services.Impl
 		{
 			_printService.PrintInfo("Started loading seed data to Elasticsearch...");
 			await CreateIndexAsync();
-			var loadData = new List<Building>
-			{
-				new Building { Id = 777771, Address = "1 avenue"},
-				new Building { Id = 777772, Address = "1st avenue"},
-				new Building { Id = 777773, Address = "1-st avenue"},
-				new Building { Id = 777774, Address = "First avenue"},
-				new Building { Id = 777775, Address = "first avenue"},
-				new Building { Id = 777776, Address = "One avenue"},
-				new Building { Id = 777777, Address = "one avenue"},
-				new Building { Id = 777778, Address = "2 avenue"},
-				new Building { Id = 777779, Address = "2nd avenue"},
-				new Building { Id = 777780, Address = "2-nd avenue"},
-				new Building { Id = 777781, Address = "Second avenue"},
-				new Building { Id = 777782, Address = "second avenue"},
-				new Building { Id = 777783, Address = "Two avenue"},
-				new Building { Id = 777784, Address = "two avenue"}
-			};
-
+			var loadData = await GetLoadData();
 			var result = await _client.IndexManyAsync(loadData);
 			if (!result.IsValid)
 			{
@@ -139,10 +135,10 @@ namespace ElasticsearchPrototype.Services.Impl
 			_printService.PrintInfo("Finished loading seed data to Elasticsearch.");
 		}
 
-		public async Task<IEnumerable<Building>> SearchAsync(string search)
+		public async Task<IEnumerable<BuildingSoundex>> SearchAsync(string search)
 		{
 			int size = 1000;
-			var result = await _client.SearchAsync<Building>(s => s
+			var result = await _client.SearchAsync<BuildingSoundex>(s => s
 				.Size(size)
 				.Query(q => q
 					.QueryString(qs => qs

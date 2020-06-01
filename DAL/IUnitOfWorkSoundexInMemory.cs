@@ -1,9 +1,9 @@
-﻿using ElasticsearchPrototype.Models;
+﻿using DAL.Models;
 using System.Collections.Generic;
 
-namespace ElasticsearchPrototype.Services
+namespace DAL
 {
-	public interface IUnitOfWork
+	public interface IUnitOfWorkSoundexInMemory
 	{
 		IEnumerable<SoundexMapping> SoundexMappings { get; }
 

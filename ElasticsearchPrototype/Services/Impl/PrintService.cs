@@ -15,11 +15,11 @@ namespace ElasticsearchPrototype.Services.Impl
 				Console.WriteLine(text);
 		}
 
-		public void PrintInfo(IEnumerable<Building> items)
+		public void PrintInfo(IEnumerable<BuildingSoundex> items)
 		{
 			Console.WriteLine("Item(s):");
 			foreach (var item in items)
-				Console.WriteLine($"\tID: {item.Id} \tAddress: {HttpUtility.HtmlDecode(item.Address)}");
+				Console.WriteLine($"\tID: {item.Id:D5} \tAddress: {HttpUtility.HtmlDecode(item.Address)}");
 		}
 
 		public void PrintError(string text)

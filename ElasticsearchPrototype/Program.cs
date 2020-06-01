@@ -1,5 +1,7 @@
-﻿using ElasticsearchPrototype.Models;
+﻿using DAL;
+using ElasticsearchPrototype.Models;
 using ElasticsearchPrototype.Services.Impl;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.IO;
@@ -14,6 +16,7 @@ namespace ElasticsearchPrototype
 		static async Task Main(string[] args)
 		{
 			Console.OutputEncoding = Encoding.UTF8;
+			var printService = new PrintService();
 
 			IConfiguration config = new ConfigurationBuilder()
 				.SetBasePath(Directory.GetCurrentDirectory())
@@ -22,12 +25,15 @@ namespace ElasticsearchPrototype
 			var elasticsearchSettings = new ElasticsearchSettings();
 			config.Bind(nameof(ElasticsearchSettings), elasticsearchSettings);
 
-			var unitOfWork = new UnitOfWork();
-			var printService = new PrintService();
+			var connectionString = config.GetConnectionString("mainDb");
+			var optionsBuilder = new DbContextOptionsBuilder<UnitOfWork>();
+			var options = optionsBuilder.UseSqlServer(connectionString).Options;
+			var unitOfWork = new UnitOfWork(options);
+
 			var elasticsearchService = new ElasticsearchService(elasticsearchSettings, unitOfWork, printService);
 			await elasticsearchService.SeedDataAsync();
 
-			printService.PrintInfo($"Enter sesrch text (or quit to exit)...{Environment.NewLine}", false);
+			printService.PrintInfo($"Enter search text (or quit to exit)...{Environment.NewLine}", false);
 			
 			// input search text: "1", "1st", "first", "one", "One", "ONe", "First", "FIRST", "FiRsT", "2nd", "avenue", "Avenue", "1 ave", "1 avenue", "ave"
 			while (true)
