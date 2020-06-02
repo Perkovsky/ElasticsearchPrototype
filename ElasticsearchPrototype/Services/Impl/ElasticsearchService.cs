@@ -36,25 +36,14 @@ namespace ElasticsearchPrototype.Services.Impl
 
 		#region Private Methods
 
-		private string[] GetStopWords()
+		private IEnumerable<string> GetStopWords()
 		{
-			return _unitOfWork.SoundexStopWords.Select(n => n.StopWord).ToArray();
+			return _unitOfWork.SoundexStopWords.Select(n => n.StopWord);
 		}
 
-		private string[] GetMappings()
+		private IEnumerable<string> GetMappings()
 		{
-			return _unitOfWork.SoundexMappings.Select(n => $"{n.Text} => {n.MatchText}").ToArray();
-		}
-
-		private async Task<IEnumerable<BuildingSoundex>> GetLoadData()
-		{
-			return await _unitOfWork.Buildings.Where(x => x.CompanyId == 1)
-				.Select(n => new BuildingSoundex
-				{
-					Id = n.Id,
-					Address = n.Address1
-				})
-				.ToListAsync();
+			return _unitOfWork.SoundexMappings.Select(n => $"{n.Text} => {n.MatchText}");
 		}
 
 		private async Task<bool> IsIndexExistsAsync()
@@ -71,6 +60,10 @@ namespace ElasticsearchPrototype.Services.Impl
 
 		private async Task<CreateIndexResponse> CreateIndexAsync()
 		{
+			// also see:
+			// https://www.elastic.co/guide/en/elasticsearch/client/net-api/7.x/writing-analyzers.html
+			// https://www.elastic.co/guide/en/elasticsearch/client/net-api/7.x/testing-analyzers.html#_testing_a_custom_analyzer_in_an_index
+
 			await DeleteIndexAsync();
 
 			var result = await _client.Indices.CreateAsync(indexName, c => c
@@ -119,20 +112,54 @@ namespace ElasticsearchPrototype.Services.Impl
 			return result;
 		}
 
+		private async Task<IEnumerable<BuildingSoundex>> GetLoadData(int skipItems, int partSize)
+		{
+			return await _unitOfWork.Buildings
+				.Select(n => new BuildingSoundex
+				{
+					Id = n.Id,
+					Address = n.Address1
+				})
+				.Skip(skipItems)
+				.Take(partSize)
+				.ToListAsync();
+		}
+
+		private async Task SeedDataInPartsAsync(int partSize)
+		{
+			int total = 0;
+			int errors = 0;
+			int skipItems = 0;
+
+			while (true)
+			{
+				var part = await GetLoadData(skipItems, partSize);
+				int count = part.Count(); //(part as ICollection<BuildingSoundex>).Count;
+				if (count == 0)
+					break;
+
+				total += count;
+				skipItems += partSize;
+				var result = await _client.IndexManyAsync(part);
+
+				if (!result.IsValid)
+				{
+					errors += result.ItemsWithErrors.Count();
+					foreach (var item in result.ItemsWithErrors)
+						_printService.PrintError($"Failed to index document {item.Id}: {item.Error}");
+				}
+			}
+
+			_printService.PrintInfo($"Finished loading seed data to Elasticsearch.{Environment.NewLine}Total: {total}, Error(s): {errors}.{Environment.NewLine}");
+		}
+
 		#endregion
 
-		public async Task SeedDataAsync()
+		public async Task SeedDataAsync(int partSize = 10000)
 		{
 			_printService.PrintInfo("Started loading seed data to Elasticsearch...");
 			await CreateIndexAsync();
-			var loadData = await GetLoadData();
-			var result = await _client.IndexManyAsync(loadData);
-			if (!result.IsValid)
-			{
-				foreach (var item in result.ItemsWithErrors)
-					_printService.PrintError($"Failed to index document {item.Id}: {item.Error}");
-			}
-			_printService.PrintInfo("Finished loading seed data to Elasticsearch.");
+			await SeedDataInPartsAsync(partSize);
 		}
 
 		public async Task<IEnumerable<BuildingSoundex>> SearchAsync(string search)
