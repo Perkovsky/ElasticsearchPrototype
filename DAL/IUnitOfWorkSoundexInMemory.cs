@@ -5,7 +5,7 @@ namespace DAL
 {
 	public interface IUnitOfWorkSoundexInMemory
 	{
-		IEnumerable<SoundexMapping> SoundexMappings { get; }
+		IEnumerable<SoundexSynonym> SoundexSynonyms { get; }
 
 		IEnumerable<SoundexStopWord> SoundexStopWords { get; }
 	}

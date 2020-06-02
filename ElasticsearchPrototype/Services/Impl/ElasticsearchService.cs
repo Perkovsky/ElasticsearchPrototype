@@ -41,9 +41,9 @@ namespace ElasticsearchPrototype.Services.Impl
 			return _unitOfWork.SoundexStopWords.Select(n => n.StopWord);
 		}
 
-		private IEnumerable<string> GetMappings()
+		private IEnumerable<string> GetSynonyms()
 		{
-			return _unitOfWork.SoundexMappings.Select(n => $"{n.Text} => {n.MatchText}");
+			return _unitOfWork.SoundexSynonyms.Select(n => $"{n.Value} => {n.Synonym}");
 		}
 
 		private async Task<bool> IsIndexExistsAsync()
@@ -73,23 +73,20 @@ namespace ElasticsearchPrototype.Services.Impl
 							.Stop("building_stop", sw => sw
 								.StopWords(GetStopWords())
 							)
-						)
-						.CharFilters(cf => cf
-							.Mapping("building", mca => mca
-								.Mappings(GetMappings())
+							.Synonym("building_synonym", sf => sf
+								.Synonyms(GetSynonyms())
 							)
 						)
 						.Analyzers(an => an
 							.Custom("index_building", ca => ca
-								.CharFilters("html_strip", "building")
+								.CharFilters("html_strip")
 								.Tokenizer("standard")
-								.Filters("lowercase", "stop", "building_stop")
+								.Filters("lowercase", "stop", "building_stop", "building_synonym")
 
 							)
 							.Custom("search_building", ca => ca
-								.CharFilters("building")
 								.Tokenizer("standard")
-								.Filters("lowercase", "stop", "building_stop")
+								.Filters("lowercase", "stop", "building_stop", "building_synonym")
 							)
 						)
 					)

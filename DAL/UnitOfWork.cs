@@ -13,9 +13,9 @@ namespace DAL
 		public DbSet<Unit> Units { get; set; }
 		public DbSet<Settings> Settings { get; set; }
 
-		//public DbSet<SoundexMapping> SoundexMappings { get; set; }
+		//public DbSet<SoundexSynonym> SoundexSynonyms { get; set; }
 		//public DbSet<SoundexStopWord> SoundexStopWords { get; set; }
-		public IEnumerable<SoundexMapping> SoundexMappings => _soundex?.SoundexMappings;
+		public IEnumerable<SoundexSynonym> SoundexSynonyms => _soundex?.SoundexSynonyms;
 		public IEnumerable<SoundexStopWord> SoundexStopWords => _soundex?.SoundexStopWords;
 
 		public UnitOfWork(DbContextOptions<UnitOfWork> options)

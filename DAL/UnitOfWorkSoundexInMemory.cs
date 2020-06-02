@@ -5,13 +5,15 @@ namespace DAL
 {
 	public class UnitOfWorkSoundexInMemory : IUnitOfWorkSoundexInMemory
 	{
-		public IEnumerable<SoundexMapping> SoundexMappings => new List<SoundexMapping>
+		public IEnumerable<SoundexSynonym> SoundexSynonyms => new List<SoundexSynonym>
 		{
-			new SoundexMapping { Text = "1", MatchText = "first" },
-			new SoundexMapping { Text = "1st", MatchText = "first" },
-			new SoundexMapping { Text = "1-st", MatchText = "first" },
-			new SoundexMapping { Text = "one", MatchText = "first" },
-			new SoundexMapping { Text = "One", MatchText = "first" },
+			//new SoundexSynonym { Value = "1", Synonyms = "1st,1-st,1th,1-th,first,one" },
+			new SoundexSynonym { Value = "1", Synonym = "first" },
+			new SoundexSynonym { Value = "1st", Synonym = "first" },
+			new SoundexSynonym { Value = "1-st", Synonym = "first" },
+			new SoundexSynonym { Value = "1th", Synonym = "first" },
+			new SoundexSynonym { Value = "1-th", Synonym = "first" },
+			new SoundexSynonym { Value = "one", Synonym = "first" },
 		};
 
 		public IEnumerable<SoundexStopWord> SoundexStopWords => new List<SoundexStopWord>
