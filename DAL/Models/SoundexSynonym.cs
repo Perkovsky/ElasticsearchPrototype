@@ -11,6 +11,7 @@ namespace DAL.Models
 		/// <summary>
 		/// Matching one-to-one. Value has only one synonym.
 		/// </summary>
+		[Obsolete("Use the 'Synonyms' property for more compact notation.", true)]
 		[StringLength(255)]
 		public string Synonym { get; set; }
 
@@ -20,7 +21,6 @@ namespace DAL.Models
 		/// <remarks>
 		/// Example: "big,large,huge"
 		/// </remarks>
-		[Obsolete("Not working correctly. Use the 'Synonym' property.", true)]
 		public string Synonyms { get; set; }
 	}
 }

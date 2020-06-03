@@ -43,7 +43,7 @@ namespace ElasticsearchPrototype.Services.Impl
 
 		private IEnumerable<string> GetSynonyms()
 		{
-			return _unitOfWork.SoundexSynonyms.Select(n => $"{n.Value} => {n.Synonym}");
+			return _unitOfWork.SoundexSynonyms.Select(n => $"{n.Synonyms} => {n.Value}");
 		}
 
 		private async Task<bool> IsIndexExistsAsync()
@@ -61,6 +61,8 @@ namespace ElasticsearchPrototype.Services.Impl
 		private async Task<CreateIndexResponse> CreateIndexAsync()
 		{
 			// also see:
+			// https://stackoverflow.com/questions/52840944/search-with-nest-not-yielding-expected-result
+			// https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-synonym-tokenfilter.html
 			// https://www.elastic.co/guide/en/elasticsearch/client/net-api/7.x/writing-analyzers.html
 			// https://www.elastic.co/guide/en/elasticsearch/client/net-api/7.x/testing-analyzers.html#_testing_a_custom_analyzer_in_an_index
 
